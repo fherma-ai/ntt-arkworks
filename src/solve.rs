@@ -33,9 +33,17 @@ fn row(value: Fr, limbs: usize) -> Tensor<u64> {
 }
 
 #[derive(Default)]
-pub struct State { limbs: usize }
+pub struct State {
+    limbs: usize,
+    /// The root the point names. It is the point's now, not the case's, so it
+    /// is read once here rather than on every transform.
+    root: Fr,
+}
 
-pub fn init(p: &Point) -> State { State { limbs: p.L as usize } }
+pub fn init(p: &Point) -> State {
+    let limbs = p.L as usize;
+    State { limbs, root: fe(&p.root.data, 0, limbs) }
+}
 
 pub fn run(state: &mut State, inp: &Inputs) -> Outputs {
     let limbs = state.limbs;
@@ -43,11 +51,11 @@ pub fn run(state: &mut State, inp: &Inputs) -> Outputs {
     let domain = Radix2EvaluationDomain::<Fr>::new(a.len())
         .expect("a power of two within the field's two-adicity");
 
-    // The case names its root, and the domain picks its own from the field's
+    // The point names its root, and the domain picks its own from the field's
     // generator. They agree for this field — but silently computing a
     // different transform would be worse than stopping here.
-    assert_eq!(domain.group_gen, fe(&inp.root.data, 0, limbs),
-               "the domain's root is not the one the case names");
+    assert_eq!(domain.group_gen, state.root,
+               "the domain's root is not the one the point names");
 
     Outputs { out: rows(&domain.fft(&a), limbs) }
 }

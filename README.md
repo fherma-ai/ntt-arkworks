@@ -21,8 +21,6 @@ to answer early.
 ## The shapes
 
 - `a` — tensor<N x L x u64>
-- `q` — tensor<L x u64>
-- `root` — tensor<L x u64>
 - returns `out` — tensor<N x L x u64>
 
 ## Generated, and not yours
